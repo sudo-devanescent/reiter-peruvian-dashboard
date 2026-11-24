@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reiter
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reiter-db-init
+  namespace: reiter
+data:
+  01-roles.sql: |
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+        CREATE ROLE anon NOLOGIN;
+      END IF;
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+        CREATE ROLE authenticated NOLOGIN;
+      END IF;
+    END $$;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reiter-pgdata
+  namespace: reiter
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reiter-media
+  namespace: reiter
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reiter-web
+  namespace: reiter
+spec:
+  type: NodePort
+  selector:
+    app: reiter
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      nodePort: 30800
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reiter
+  namespace: reiter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: reiter
+  template:
+    metadata:
+      labels:
+        app: reiter
+    spec:
+      securityContext:
+        fsGroup: 10001
+      initContainers:
+        - name: fix-media-perms
+          image: localhost/reiter-app:latest
+          imagePullPolicy: Never
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - chown -R 10001:10001 /app/media
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+      containers:
+        - name: db
+          image: docker.io/library/postgres:16
+          env:
+            - {name: POSTGRES_USER, value: postgres}
+            - {name: POSTGRES_PASSWORD, value: reiter_local_2026}
+            - {name: POSTGRES_DB, value: reiter}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+          volumeMounts:
+            - {name: pgdata, mountPath: /var/lib/postgresql/data}
+            - {name: dbinit, mountPath: /docker-entrypoint-initdb.d}
+        - name: web
+          image: localhost/reiter-app:latest
+          imagePullPolicy: Never
+          securityContext:
+            runAsUser: 10001
+          command:
+            - sh
+            - -c
+            - >
+              until python manage.py migrate --noinput; do
+              echo "Esperando a la base de datos..."; sleep 3; done;
+              exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --no-control-socket
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          env:
+            - {name: APP_ENV, value: dev}
+            - {name: DJANGO_DEBUG, value: "true"}
+            - {name: DJANGO_SECRET_KEY, value: "reiter-demo-academica-clave-local-no-usar-fuera-de-este-proyecto-0123456789"}
+            - {name: DATABASE_URL, value: "postgresql://postgres:reiter_local_2026@127.0.0.1:5432/reiter"}
+            - {name: DB_SSLMODE, value: disable}
+            - {name: PUBLIC_BASE_URL, value: "http://localhost:30800"}
+            - {name: IA_DETECTOR, value: simulado}
+            - {name: WHATSAPP_CLIENT, value: "notificaciones.whatsapp.ConsoleClient"}
+          volumeMounts:
+            - {name: media, mountPath: /app/media}
+        - name: worker
+          image: localhost/reiter-app:latest
+          imagePullPolicy: Never
+          securityContext:
+            runAsUser: 10001
+          command:
+            - sh
+            - -c
+            - >
+              until python manage.py migrate --check >/dev/null 2>&1; do
+              echo "Esperando migraciones..."; sleep 3; done;
+              exec python manage.py worker_ia
+          env:
+            - {name: APP_ENV, value: dev}
+            - {name: DJANGO_DEBUG, value: "true"}
+            - {name: DJANGO_SECRET_KEY, value: "reiter-demo-academica-clave-local-no-usar-fuera-de-este-proyecto-0123456789"}
+            - {name: DATABASE_URL, value: "postgresql://postgres:reiter_local_2026@127.0.0.1:5432/reiter"}
+            - {name: DB_SSLMODE, value: disable}
+            - {name: PUBLIC_BASE_URL, value: "http://localhost:30800"}
+            - {name: IA_DETECTOR, value: simulado}
+            - {name: WHATSAPP_CLIENT, value: "notificaciones.whatsapp.ConsoleClient"}
+          volumeMounts:
+            - {name: media, mountPath: /app/media}
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: reiter-pgdata
+        - name: media
+          persistentVolumeClaim:
+            claimName: reiter-media
+        - name: dbinit
+          configMap:
+            name: reiter-db-init
