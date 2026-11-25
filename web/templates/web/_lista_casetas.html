@@ -1,0 +1,10 @@
+{% for caseta in casetas %}
+  <div class="mc-fila">
+    <div><strong>{{ caseta.nombre }}</strong><br>{{ caseta.codigo }}{% if not caseta.activa %} · Inactiva{% endif %}</div>
+    {% if form %}
+      <a href="?editar={{ caseta.pk }}#form-caseta" aria-label="Editar {{ caseta.nombre }}">Editar</a>
+    {% endif %}
+  </div>
+{% empty %}
+  <p class="mc-vacio">Aún no hay casetas registradas.</p>
+{% endfor %}

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
@@ -18,11 +18,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
-from django.contrib.auth.decorators import login_required
 from auditoria import services as audit
 from auditoria.models import AuditEvent
 from campo import services as catalogo
-from campo.models import FieldLot, FieldRow, FieldSegment, Marker
+from campo.models import Caseta, FieldLot, FieldRow, FieldSegment, Fundo, Marker, ModuloMuestreo
 from cuentas import services as cuentas
 from cuentas.models import AccountStatus, Device, PasswordResetRequest, Role, User
 from evidencias.media import signed_image_url
@@ -35,9 +34,9 @@ from revision import services as revision
 from revision.models import CON_AVISO, DECIDIBLES, Case, ReviewStatus
 from web import messages as M
 from web import queries
-from web.forms import (ApproveForm, AsignarContrasenaForm, CorrectionForm, DecisionForm, DividirForm, EditarCuentaForm,
+from web.forms import (ApproveForm, CasetaForm, AsignarContrasenaForm, AsignarFundoForm, CorrectionForm, DecisionForm, DividirForm, EditarCuentaForm,
                        FiltroCasosForm, FiltroDescartadasForm, FiltroMonitoreoForm, HileraForm, HilerasForm, LoginForm, LoteForm,
-                       MarcadorForm, NuevaCuentaForm, RecipientForm, SegmentoForm)
+                       MarcadorForm, ModuloMuestreoForm, NuevaCuentaForm, RecipientForm, SegmentoForm)
 from web.permissions import can, web_view
 
 
@@ -391,7 +390,19 @@ def plano(request):
 # ------------------------------------------------------------------ sesiones
 @web_view("sesiones.ver")
 def detecciones_reiter(request):
-    return render(request, "web/detecciones.html")
+    modulo = request.GET.get("modulo", "")
+    casetas = Caseta.objects.filter(activa=True)
+    modulos = [(str(registro.pk), str(registro)) for registro in ModuloMuestreo.objects.select_related("fundo")]
+    if modulo in dict(modulos):
+        casetas = casetas.filter(modulo_id=modulo)
+    else:
+        modulo = ""
+    return render(request, "web/detecciones.html", {
+        "modulos": modulos,
+        "modulo_actual": modulo,
+        "casetas": casetas,
+        "caseta_actual": request.GET.get("caseta", ""),
+    })
 
 
 @web_view("sesiones.ver")
@@ -406,11 +417,7 @@ def monitoreo_reiter(request):
 
 @web_view("sesiones.ver")
 def sesiones(request):
-    qs = (MonitoringSession.objects.select_related("operator", "controller_device")
-          .annotate(n_pasadas=Count("passes", distinct=True), n_capturas=Count("captures", distinct=True))
-          .order_by("-started_at"))
-    page = Paginator(qs, 25).get_page(request.GET.get("pagina"))
-    return render(request, "web/sesiones.html", {"page": page})
+    return redirect("web:monitoreo_reiter")
 
 
 @web_view("sesiones.ver")
@@ -863,7 +870,7 @@ def sesion_eliminar(request, pk):
             pendientes = limpieza.pendientes_en_nube()
             if pendientes:
                 messages.warning(request, M.LIMPIEZA_NUBE_PENDIENTE.format(n=pendientes))
-            return redirect("web:sesiones")
+            return redirect("web:monitoreo_reiter")
     return render(request, "web/sesion_eliminar.html", {"s": s, "r": limpieza.resumen_sesion(s), "error": error,
                                                          "palabra": limpieza.CONFIRMAR})
 
@@ -895,6 +902,74 @@ def limpieza_fotos(request):
         "total_borradas": DeletedCapture.objects.count(),
         "ultimas": DeletedCapture.objects.select_related("deleted_by").order_by("-deleted_at")[:10]})
 
-@login_required
+@web_view("sesiones.ver")
+@require_http_methods(["GET", "POST"])
 def modulos_casetas(request):
-    return render(request, "web/modulos_casetas.html")
+    puede_gestionar = can(request.user, "catalogos.gestionar")
+    if request.method == "POST" and not puede_gestionar:
+        raise PermissionDenied
+
+    editar = request.GET.get("editar")
+    caseta = get_object_or_404(Caseta, pk=editar) if editar and puede_gestionar else None
+    form = CasetaForm(request.POST if request.method == "POST" else None, instance=caseta)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, M.CASETA_GUARDADA)
+        return redirect("web:modulos_casetas")
+
+    return _render_casetas(
+        request,
+        form=form if puede_gestionar else None,
+        editando=caseta,
+        form_modulo=ModuloMuestreoForm(auto_id="id_modulo_%s") if puede_gestionar else None,
+    )
+
+
+def _render_casetas(request, **contexto):
+    modulos = ModuloMuestreo.objects.select_related("fundo").prefetch_related("casetas")
+    grupos = []
+    for modulo in modulos:
+        casetas = list(modulo.casetas.all())
+        grupos.append((modulo, casetas, sum(caseta.activa for caseta in casetas)))
+    return render(request, "web/modulos_casetas.html", {
+        "modulos": grupos,
+        "sin_modulo": Caseta.objects.filter(modulo__isnull=True),
+        **contexto,
+    })
+
+@web_view("sesiones.ver")
+@require_http_methods(["GET", "POST"])
+def fundos(request):
+    puede_asignar = can(request.user, "catalogos.gestionar")
+    if request.method == "POST" and not puede_asignar:
+        raise PermissionDenied
+
+    form = AsignarFundoForm(request.POST if request.method == "POST" else None) if puede_asignar else None
+    if request.method == "POST" and form.is_valid():
+        modulo = form.cleaned_data["modulo"]
+        modulo.fundo = form.cleaned_data["fundo"]
+        modulo.save(update_fields=["fundo"])
+        messages.success(request, M.FUNDO_ASIGNADO)
+        return redirect("web:fundos")
+
+    return render(request, "web/fundos.html", {
+        "fundos": Fundo.objects.prefetch_related("modulos"),
+        "sin_fundo": ModuloMuestreo.objects.filter(fundo__isnull=True),
+        "asignacion": form,
+    })
+
+
+@web_view("catalogos.gestionar")
+@require_http_methods(["GET", "POST"])
+def modulo_form(request, pk=None):
+    modulo = get_object_or_404(ModuloMuestreo, pk=pk) if pk is not None else None
+    form = ModuloMuestreoForm(
+        request.POST if request.method == "POST" else None, instance=modulo, auto_id="id_modulo_%s",
+    )
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, M.MODULO_GUARDADO)
+        return redirect("web:modulos_casetas")
+    return _render_casetas(
+        request, form=CasetaForm(), form_modulo=form, modulo_en_edicion=modulo, abrir_modulo=True,
+    )

@@ -55,3 +55,12 @@ LIMPIEZA_DESCARTADAS_OK = "Se borraron {n} foto(s) descartadas por la IA."
 LIMPIEZA_NADA = "No hay fotos que cumplan la condición: no se borró nada."
 LIMPIEZA_NUBE_PENDIENTE = ("{n} foto(s) aún no se borraron en Cloudinary (sin conexión o error): el worker lo "
                            "reintenta cada minuto.")
+
+
+CASETA_GUARDADA = "Caseta guardada."
+
+MODULO_GUARDADO = "Módulo guardado."
+
+MODULO_NOMBRE_REPETIDO = "Ya hay un módulo con ese nombre en este fundo."
+
+FUNDO_ASIGNADO = "Fundo asignado al módulo."

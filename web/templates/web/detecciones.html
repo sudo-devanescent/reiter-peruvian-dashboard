@@ -10,7 +10,6 @@
 <div class="detecciones">
     <h1>Detecciones de arándanos</h1>
     <p>Consulta las capturas por módulo y caseta y los indicios sugeridos por la IA.</p>
-  
 
   <dl class="detecciones-indicadores" aria-label="Indicadores pendientes de conexión">
     <div class="detecciones-tarjeta"><dt>Capturas</dt><dd>—</dd></div>
@@ -20,31 +19,80 @@
   </dl>
 
   <section class="detecciones-tarjeta" aria-labelledby="detecciones-filtros">
-    <h2 id="detecciones-filtros">Filtros de búsqueda</h2>
-    <p>Los filtros se habilitarán al conectar los datos de las capturas.</p>
-    <fieldset class="detecciones-campos" disabled>
-      <legend class="sr-only">Módulo y caseta</legend>
-      <label>Módulo <select><option>Todos los módulos</option></select></label>
-      <label>Caseta <select><option>Todas las casetas</option></select></label>
-    </fieldset>
+    <h2 id="detecciones-filtros">{% icono "filtro" %} Módulo y caseta</h2>
+    <form class="detecciones-campos" method="get">
+      <label>Módulo
+        <select name="modulo" data-modulo>
+          <option value="">Todos los módulos</option>
+          {% for valor, nombre in modulos %}
+            <option value="{{ valor }}"{% if valor == modulo_actual %} selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Caseta
+        <select name="caseta" data-caseta>
+          <option value="">{% if casetas %}Todas las casetas{% else %}Sin casetas activas{% endif %}</option>
+          {% for caseta in casetas %}
+            <option value="{{ caseta.pk }}"{% if caseta.pk|stringformat:"s" == caseta_actual %} selected{% endif %}>{{ caseta.nombre }} · {{ caseta.codigo }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+    {% if not casetas %}<p class="detecciones-ayuda">Puedes registrar casetas desde <a href="{% url 'web:modulos_casetas' %}">Casetas</a>.</p>{% endif %}
   </section>
 
   <div class="detecciones-resultados">
-    <section class="detecciones-tarjeta" aria-labelledby="detecciones-fotos">
+    <section class="detecciones-tarjeta detecciones-foto" aria-labelledby="detecciones-fotos">
       <h2 id="detecciones-fotos">Fotografías de las capturas</h2>
       <div class="detecciones-vacio">
-        {% icono "cajas" %}
+        {% icono "imagen" %}
         <p>Las fotografías aparecerán aquí cuando se conecten las capturas.</p>
       </div>
     </section>
+
     <section class="detecciones-tarjeta" aria-labelledby="detecciones-clasificacion">
       <h2 id="detecciones-clasificacion">Clasificación de arándanos</h2>
-      <dl class="detecciones-clases">
-        <div><dt>Calidad</dt><dd>Inmaduros, sin bloom y secos.</dd></div>
-        <div><dt>Condición</dt><dd>Rasgados y otras condiciones por confirmar.</dd></div>
-      </dl>
-      <p>Los resultados de IA están pendientes de conexión.</p>
+      <div class="detecciones-clases">
+        <section class="detecciones-grupo detecciones-grupo--calidad">
+          <h3>
+            <span class="detecciones-simbolo">{% icono "uva" %}</span>
+            <span><strong>Calidad </strong><small>12 categorías</small></span>
+          </h3>
+          <ul role="list">
+            <li>{% icono "brote" %} Inmaduros</li>
+            <li>{% icono "medidor" %} Bajo calibre</li>
+            <li>{% icono "ojo" %} Cicatrices</li>
+            <li>{% icono "alerta" %} Desgarro</li>
+            <li>{% icono "ojo" %} Hendidura pedicelar</li>
+            <li>{% icono "uva" %} Sin bloom</li>
+            <li>{% icono "bug" %} Presencia de insectos</li>
+            <li>{% icono "ojo" %} Russet</li>
+            <li>{% icono "ojo" %} Suciedad</li>
+            <li>{% icono "hoja" %} Péndulo adherido</li>
+            <li>{% icono "brote" %} Resto floral</li>
+            <li>{% icono "hoja" %} Filodio (verde)</li>
+          </ul>
+        </section>
+        <section class="detecciones-grupo detecciones-grupo--condicion">
+          <h3>
+            <span class="detecciones-simbolo">{% icono "actividad" %}</span>
+            <span><strong>Condición </strong><small>8 categorías</small></span>
+          </h3>
+          <ul role="list">
+            <li>{% icono "uva" %} Blando</li>
+            <li>{% icono "alerta" %} Daño mecánico</li>
+            <li>{% icono "uva" %} Deshidratado</li>
+            <li>{% icono "ojo" %} Exudación</li>
+            <li>{% icono "alerta" %} Pudrición</li>
+            <li>{% icono "brote" %} Hongo</li>
+            <li>{% icono "alerta" %} Machucón</li>
+            <li>{% icono "alerta" %} Partidura</li>
+          </ul>
+        </section>
+      </div>
     </section>
   </div>
 </div>
 {% endblock %}
+
+{% block scripts %}<script src="{% static 'web/detecciones.js' %}" defer></script>{% endblock %}

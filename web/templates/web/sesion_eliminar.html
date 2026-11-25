@@ -1,6 +1,6 @@
 {% extends "web/base.html" %}{% load web_tags %}
 {% block titulo %}Eliminar sesión{% endblock %}
-{% block migas %}{% icono "sesiones" %}<a href="{% url 'web:sesiones' %}">Sesiones</a><span class="sep">›</span><a href="{% url 'web:sesion' s.pk %}">{{ s.started_at|date:"d/m/Y H:i" }}</a><span class="sep">›</span><span>Eliminar</span>{% endblock %}
+{% block migas %}{% icono "sesiones" %}<a href="{% url 'web:monitoreo_reiter' %}">Monitoreo</a><span class="sep">›</span><a href="{% url 'web:sesion' s.pk %}">{{ s.started_at|date:"d/m/Y H:i" }}</a><span class="sep">›</span><span>Eliminar</span>{% endblock %}
 {% block contenido %}
 <div class="encabezado">
   <div class="titulo">

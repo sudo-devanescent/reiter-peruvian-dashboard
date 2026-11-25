@@ -352,3 +352,52 @@ subida → confirmación → worker → caso → decisión → aviso.
 - Monitoreo filtra capturas confirmadas por periodo, módulo y caseta. El módulo usa el lote de la captura.
 - La caseta es opcional en las sesiones existentes. Los registros sin asignar se muestran en la consulta general.
 - La pantalla de contraseña centra el formulario y mejora la presentación de requisitos y errores. Conserva el flujo de Django.
+
+## Clasificación de arándanos y módulos (24/11/2026)
+
+- Detecciones muestra las categorías de Calidad y Condición en tarjetas adaptables.
+- Detecciones y Casetas muestran Rosita, Arana, Raymi y Breeze desde la misma lista de nombres.
+
+
+## Selector de módulos y gestión de casetas (24/11/2026)
+
+- Detecciones permite seleccionar Rosita, Arana, Raymi o Breeze y consultar sus casetas activas.
+- La clasificación se explora mediante paneles desplegables de Calidad y Condición.
+- Casetas permite registrar, editar y desactivar casetas con el permiso de gestión de catálogos. Las casetas previas se pueden asignar a un módulo.
+
+
+## Distribución compacta de Detecciones (24/11/2026)
+
+- Fotografías y clasificación comparten una fila en pantallas amplias. Calidad y Condición se despliegan de forma independiente.
+- Los selectores de módulo y caseta aplican cada cambio sin un botón adicional.
+
+- Calidad y Condición quedan visibles en dos columnas, con iconos y sin viñetas.
+
+
+## Navegación de Monitoreo (24/11/2026)
+
+- Monitoreo reemplaza el listado independiente de sesiones. La dirección anterior redirige a Monitoreo.
+- El detalle de las capturas y sesiones conserva sus acciones y vuelve a Monitoreo.
+
+
+## Ventana de casetas (24/11/2026)
+
+- Agregar y editar casetas abre un formulario emergente. Los errores de validación se muestran en la misma ventana.
+
+- El contador de cada módulo suma las casetas activas. Las inactivas se mantienen visibles para su gestión.
+
+
+## Fundos, módulos y casetas (24/11/2026)
+
+- Fundos muestra Achirana y Papito. Casetas permite crear módulos y asignarlos a un fundo.
+- Detecciones y Monitoreo usan los módulos registrados. Las casetas existentes conservan su módulo.
+
+- Las tarjetas de Casetas centran el nombre del módulo y muestran la edición como un icono lateral.
+
+- Casetas abre el alta y la edición de módulos en una ventana emergente y alinea sus datos a la izquierda.
+
+- Cada fundo puede tener módulos con el mismo nombre que otro fundo. Los selectores incluyen el nombre del fundo.
+
+- Fundos muestra tarjetas por fundo y permite asignar módulos desde la misma pantalla.
+
+- Asignar fundo abre un diálogo sobre las tarjetas y vuelve a abrirlo si el formulario tiene errores.

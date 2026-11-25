@@ -28,12 +28,13 @@ def monitoreo_capturas(filtros):
     if filtros.get("hasta"):
         capturas = capturas.filter(captured_at__date__lte=filtros["hasta"])
     if filtros.get("modulo"):
-        capturas = capturas.filter(monitoring_pass__lot=filtros["modulo"])
+        capturas = capturas.filter(session__caseta__modulo=filtros["modulo"])
     if filtros.get("caseta"):
         capturas = capturas.filter(session__caseta=filtros["caseta"])
 
     filas = capturas.order_by().values(
-        modulo=F("monitoring_pass__lot__code"),
+        modulo=F("session__caseta__modulo__nombre"),
+        fundo=F("session__caseta__modulo__fundo__nombre"),
         caseta=F("session__caseta__codigo"),
     ).annotate(
         total=Count("pk"), primera=Min("captured_at"), ultima=Max("captured_at"),
@@ -55,7 +56,7 @@ def monitoreo_capturas(filtros):
     if intervalos:
         resumen["intervalo"] = round(segundos / intervalos / 60, 1)
     recientes = capturas.select_related(
-        "operator_user", "monitoring_pass__lot", "session__caseta",
+        "operator_user", "session__caseta__modulo__fundo",
     ).order_by("-captured_at", "pk")[:20]
     return resumen, filas, recientes
 

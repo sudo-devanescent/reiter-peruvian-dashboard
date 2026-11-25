@@ -51,7 +51,7 @@
         <tbody>
           {% for fila in filas %}
             <tr>
-              <td>{{ fila.modulo }}</td>
+              <td>{{ fila.modulo|default:"Sin asignar" }}{% if fila.fundo %} · {{ fila.fundo }}{% endif %}</td>
               <td>{{ fila.caseta|default:"Sin asignar" }}</td>
               <td>{{ fila.total }}</td>
               <td>{{ fila.ultima|date:"d/m/Y H:i" }}</td>
@@ -85,7 +85,7 @@
             <tr>
               <td><a href="{% url 'web:captura' captura.pk %}">{{ captura.captured_at|date:"d/m/Y H:i" }}</a></td>
               <td>{{ captura.operator_user.full_name }}</td>
-              <td>{{ captura.monitoring_pass.lot.code }}</td>
+              <td>{{ captura.session.caseta.modulo|default:"Sin asignar" }}</td>
               <td>{{ captura.session.caseta.codigo|default:"Sin asignar" }}</td>
             </tr>
           {% empty %}
@@ -94,7 +94,6 @@
         </tbody>
       </table>
     </div>
-    <a class="rc-link" href="{% url 'web:sesiones' %}">Ver sesiones de muestreo →</a>
   </section>
   {% endif %}
 </div>

@@ -1,0 +1,61 @@
+{% extends "web/base.html" %}
+{% load static web_tags %}
+{% block titulo %}Fundos{% endblock %}
+{% block contenido %}
+<div class="fundos">
+  <header class="fundos-encabezado">
+    <h1>Fundos</h1>
+    {% if asignacion %}
+      <button class="btn btn-primario" type="button" data-asignar-fundo>{% icono "ubicar" %} Asignar fundo</button>
+    {% endif %}
+  </header>
+
+  <div class="fundos-grid">
+    {% for fundo in fundos %}
+      <section class="fundos-tarjeta" aria-labelledby="fundo-{{ fundo.pk }}">
+        <header class="fundos-tarjeta-cab">
+          <span class="fundos-icono">{% icono "lote" %}</span>
+          <h2 id="fundo-{{ fundo.pk }}">{{ fundo.nombre }}</h2>
+          {% with total=fundo.modulos.all|length %}
+            <span class="fundos-total">{{ total }} {% if total == 1 %}módulo{% else %}módulos{% endif %}</span>
+          {% endwith %}
+        </header>
+        {% with modulos=fundo.modulos.all %}
+          {% if modulos %}
+            <ul class="fundos-modulos" role="list">
+              {% for modulo in modulos %}<li>{% icono "capas" %} {{ modulo.nombre }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <p class="fundos-vacio">Todavía no hay módulos asignados.</p>
+          {% endif %}
+        {% endwith %}
+      </section>
+    {% endfor %}
+  </div>
+
+  {% if sin_fundo %}
+    <section class="fundos-pendientes" aria-labelledby="fundos-pendientes">
+      <h2 id="fundos-pendientes">Módulos por asignar</h2>
+      <ul class="fundos-modulos" role="list">
+        {% for modulo in sin_fundo %}<li>{% icono "capas" %} {{ modulo.nombre }}</li>{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+  {% if asignacion %}
+    <dialog class="fundos-dialogo" id="asignar-fundo" aria-labelledby="titulo-asignar-fundo"
+            {% if asignacion.is_bound %}data-reabrir{% endif %}>
+      <h2 id="titulo-asignar-fundo">Asignar fundo</h2>
+      <form method="post" class="fundos-formulario">
+        {% csrf_token %}
+        {{ asignacion.as_p }}
+        <div class="mc-dialogo-acciones">
+          <button class="btn" type="button" data-cancelar-fundo>Cancelar</button>
+          <button class="btn btn-primario" type="submit">{% icono "guardar" %} Guardar asignación</button>
+        </div>
+      </form>
+    </dialog>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}{% if asignacion %}<script src="{% static 'web/fundos.js' %}" defer></script>{% endif %}{% endblock %}

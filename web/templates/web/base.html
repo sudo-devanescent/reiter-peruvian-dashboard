@@ -57,22 +57,22 @@
     <span class="txt">Detecciones</span>
 </a>
 <a class="item" href="{% url 'web:monitoreo_reiter' %}"
-   {% if n == 'monitoreo_reiter' %}aria-current="page"{% endif %}>
+   {% if n == 'monitoreo_reiter' or n == 'sesion' or n == 'captura' or n == 'sesion_eliminar' %}aria-current="page"{% endif %}>
     {% icono "actividad" %}
     <span class="txt">Monitoreo</span>
 </a>
-<a class="item" href="{% url 'web:sesiones' %}"
-   {% if n == 'sesiones' or n == 'sesion' or n == 'captura' %}aria-current="page"{% endif %}>
-    {% icono "sesiones" %}
-    <span class="txt">Sesiones de muestreo</span>
-</a>
 {% endif %}
 
-{% if puede.catalogos_gestionar %}
-<a class="item" href="{% url 'web:catalogos' %}"
-   {% if n == 'catalogos' or n == 'catalogo_lote' %}aria-current="page"{% endif %}>
+{% if puede.sesiones_ver %}
+<a class="item" href="{% url 'web:fundos' %}"
+   {% if n == 'fundos' %}aria-current="page"{% endif %}>
     {% icono "lote" %}
-    <span class="txt">Lotes</span>
+    <span class="txt">Fundos</span>
+</a>
+<a class="item" href="{% url 'web:modulos_casetas' %}"
+   {% if n == 'modulos_casetas' or n == 'modulo_nuevo' or n == 'modulo_editar' %}aria-current="page"{% endif %}>
+    {% icono "lote" %}
+    <span class="txt">Casetas</span>
 </a>
 {% endif %}
 
@@ -94,10 +94,7 @@
 </a>
 {% endif %}
 
-<a class="item" href="{% url 'web:modulos_casetas' %}">
-    {% icono "lote" %}
-    <span class="txt">Módulos y casetas</span>
-</a>
+
 {% endwith %}
 
     <div class="pie-lateral">

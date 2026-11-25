@@ -3,7 +3,7 @@ from django import forms
 from django.conf import settings
 from django.core.cache import cache
 
-from campo.models import Caseta, FieldLot, MarkerPosition
+from campo.models import Caseta, Fundo, MarkerPosition, ModuloMuestreo
 from cuentas.models import AccountStatus, Role, User
 from notificaciones.models import NotificationRecipient
 from revision.models import DECISIONS, ReviewStatus
@@ -201,7 +201,7 @@ class FiltroMonitoreoForm(forms.Form):
     desde = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
     hasta = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
     modulo = forms.ModelChoiceField(
-        queryset=FieldLot.objects.all(), required=False, empty_label="Todos los módulos",
+        queryset=ModuloMuestreo.objects.select_related("fundo"), required=False, empty_label="Todos los módulos",
     )
     caseta = forms.ModelChoiceField(
         queryset=Caseta.objects.all(), required=False, empty_label="Todas las casetas",
@@ -304,3 +304,50 @@ class MarcadorForm(_Catalogo):
         super().__init__(*args, **kwargs)
         self.fields["segment"].choices = [("", "— Sin segmento —")] + [
             (s.pk, f"{s.code} (plantas {s.start_plant}–{s.end_plant})") for s in segmentos]
+
+
+class CasetaForm(forms.ModelForm):
+    class Meta:
+        model = Caseta
+        fields = ("modulo", "codigo", "nombre", "activa")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["modulo"].queryset = ModuloMuestreo.objects.select_related("fundo")
+        self.fields["modulo"].required = True
+        self.fields["modulo"].label = "Módulo"
+        self.fields["codigo"].label = "Código"
+        self.fields["activa"].initial = True
+
+
+class ModuloMuestreoForm(forms.ModelForm):
+    class Meta:
+        model = ModuloMuestreo
+        fields = ("fundo", "nombre")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["fundo"].required = True
+
+    def clean(self):
+        datos = super().clean()
+        nombre, fundo = datos.get("nombre"), datos.get("fundo")
+        if nombre and fundo and ModuloMuestreo.objects.filter(
+            nombre__iexact=nombre, fundo=fundo,
+        ).exclude(pk=self.instance.pk).exists():
+            self.add_error("nombre", M.MODULO_NOMBRE_REPETIDO)
+        return datos
+
+
+class AsignarFundoForm(forms.Form):
+    modulo = forms.ModelChoiceField(label="Módulo", queryset=ModuloMuestreo.objects.select_related("fundo"))
+    fundo = forms.ModelChoiceField(label="Fundo de destino", queryset=Fundo.objects.all())
+
+    def clean(self):
+        datos = super().clean()
+        modulo, fundo = datos.get("modulo"), datos.get("fundo")
+        if modulo and fundo and ModuloMuestreo.objects.filter(
+            nombre__iexact=modulo.nombre, fundo=fundo,
+        ).exclude(pk=modulo.pk).exists():
+            self.add_error("fundo", M.MODULO_NOMBRE_REPETIDO)
+        return datos

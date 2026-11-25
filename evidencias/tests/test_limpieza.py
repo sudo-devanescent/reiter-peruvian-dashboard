@@ -144,7 +144,7 @@ class PantallasDeLimpieza(TestCase):
         r = self.client.post(url, {"confirmacion": "no"})
         self.assertContains(r, "Para confirmar")
         r = self.client.post(url, {"confirmacion": "ELIMINAR"})
-        self.assertRedirects(r, reverse("web:sesiones"))
+        self.assertRedirects(r, reverse("web:monitoreo_reiter"))
         self.assertFalse(MonitoringSession.objects.exists())
 
     def test_pagina_de_limpieza(self):

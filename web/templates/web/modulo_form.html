@@ -1,0 +1,16 @@
+{% extends "web/base.html" %}
+{% load web_tags %}
+{% block titulo %}{% if modulo %}Editar módulo{% else %}Agregar módulo{% endif %}{% endblock %}
+{% block contenido %}
+<div class="modulos-casetas">
+  <section class="mc-modulo">
+    <h1>{% if modulo %}Editar {{ modulo.nombre }}{% else %}Agregar módulo{% endif %}</h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-primario" type="submit">{% icono "guardar" %} Guardar módulo</button>
+      <a class="btn" href="{% url 'web:modulos_casetas' %}">Cancelar</a>
+    </form>
+  </section>
+</div>
+{% endblock %}

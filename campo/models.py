@@ -1,6 +1,7 @@
 # campo/models.py — Catálogos del fundo (tablas field_lots, field_rows, field_segments, markers, quality_profiles).
 from django.db import models
 from django.db.models import F, Q
+from django.db.models.functions import Lower
 from config.restricciones import checks_de_opciones
 
 
@@ -21,7 +22,35 @@ class FieldLot(models.Model):
         return self.code
 
 
+class Fundo(models.Model):
+    nombre = models.CharField(max_length=80, unique=True)
+
+    class Meta:
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+
+class ModuloMuestreo(models.Model):
+    nombre = models.CharField(max_length=80)
+    fundo = models.ForeignKey(Fundo, on_delete=models.PROTECT, blank=True, null=True, related_name="modulos")
+
+    class Meta:
+        ordering = ["nombre", "pk"]
+        constraints = [
+            models.UniqueConstraint(Lower("nombre"), "fundo", name="modulo_nombre_unico_por_fundo"),
+        ]
+
+    def __str__(self):
+        if self.fundo_id is not None:
+            return f"{self.nombre} · {self.fundo.nombre}"
+        return self.nombre
+
+
 class Caseta(models.Model):
+    modulo = models.ForeignKey(ModuloMuestreo, on_delete=models.PROTECT, blank=True, null=True,
+                               related_name="casetas")
     codigo = models.CharField(max_length=20, unique=True)
     nombre = models.CharField(max_length=100)
     activa = models.BooleanField(default=True)

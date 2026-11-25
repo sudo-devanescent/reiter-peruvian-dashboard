@@ -13,9 +13,6 @@
   </div>
 </div>
 
-<div class="barra-hilera" role="img" aria-label="Segmentos activos sobre las {{ row.plant_count }} plantas">
-  {% for t in tramos %}<span class="tramo" style="left: {{ t.left|stringformat:"s" }}%; width: {{ t.width|stringformat:"s" }}%" title="{{ t.code }}: plantas {{ t.ini }} a {{ t.fin }}"></span>{% endfor %}
-</div>
 
 <div class="rejilla dos amplia catalogo">
   <div>

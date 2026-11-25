@@ -1,50 +1,75 @@
 {% extends "web/base.html" %}
-{% load web_tags %}
-{% block titulo %}Módulos y casetas{% endblock %}
+{% load static web_tags %}
+{% block titulo %}Casetas{% endblock %}
 {% block body_class %}pagina-modulos-casetas{% endblock %}
 {% block contenido %}
 <div class="modulos-casetas">
   <header class="mc-encabezado">
-    <div>
-      <h1>Módulos y casetas</h1>
-      <p class="mc-subtitulo">Organización del muestreo y seguimiento visual de las casetas por módulo.</p>
-    </div>
+    <div><h1>Casetas</h1><p class="mc-subtitulo">Organiza las casetas de muestreo por módulo.</p></div>
+    {% if form %}
+      <div class="mc-acciones-encabezado">
+        <a class="btn" href="{% url 'web:modulo_nuevo' %}" data-abrir-formulario-modulo
+           data-titulo-modulo="Agregar módulo">{% icono "mas" %} Agregar módulo</a>
+        <a class="btn btn-primario" href="{% url 'web:modulos_casetas' %}#form-caseta" data-agregar-caseta>{% icono "mas" %} Agregar caseta</a>
+      </div>
+    {% endif %}
   </header>
 
-  <section class="mc-resumen" aria-label="Resumen general">
-    <div><span class="mc-etiqueta">Módulos de la empresa</span><strong>4</strong><small>Estructura confirmada</small></div>
-    <div><span class="mc-etiqueta">Casetas registradas</span><strong>—</strong><small>Pendiente de integración</small></div>
-    <div><span class="mc-etiqueta">Capturas por caseta</span><strong>—</strong><small>Pendiente de integración</small></div>
+  <section class="mc-grid" aria-label="Módulos">
+    {% for modulo, casetas, activas in modulos %}
+      <article class="mc-modulo">
+        <div class="mc-modulo-cab">
+          <div class="mc-icono">{% icono "lote" %}</div>
+          <div class="mc-modulo-titulo">
+            <h2>{{ modulo.nombre }}</h2>
+            <p>{{ modulo.fundo|default:"Fundo por asignar" }}</p>
+            <span class="mc-chip">{{ activas }} {% if activas == 1 %}caseta activa{% else %}casetas activas{% endif %}</span>
+          </div>
+          {% if form %}
+            <a class="mc-editar-modulo" href="{% url 'web:modulo_editar' modulo.pk %}"
+               data-abrir-formulario-modulo data-nombre-modulo="{{ modulo.nombre }}"
+               data-fundo-modulo="{{ modulo.fundo_id|default_if_none:'' }}" data-titulo-modulo="Editar {{ modulo.nombre }}"
+               aria-label="Editar módulo {{ modulo.nombre }}" title="Editar módulo">{% icono "editar" %}</a>
+          {% endif %}
+        </div>
+        {% include "web/_lista_casetas.html" %}
+      </article>
+    {% endfor %}
+    {% if sin_modulo %}
+      <article class="mc-modulo">
+        <h2>Casetas sin módulo</h2>
+        {% include "web/_lista_casetas.html" with casetas=sin_modulo %}
+      </article>
+    {% endif %}
   </section>
 
-  <div class="mc-seccion-titulo">
-    <h2>Distribución por módulo</h2>
-  </div>
-  <section class="mc-grid" aria-label="Listado de módulos">
-    <article class="mc-modulo">
-      <div class="mc-modulo-cab"><div class="mc-icono" aria-hidden="true">⌂</div><div><h3>Módulo 1</h3><p>Rosita</p></div><span class="mc-chip">M01</span></div>
-      <div class="mc-fila"><span>Casetas del módulo</span><strong>Por registrar</strong></div>
-      <div class="mc-fila"><span>Fotografías recibidas</span><strong>Sin conectar</strong></div>
-      <div class="mc-vacio">ℹ Las casetas de este módulo aparecerán aquí cuando se registren.</div>
-    </article>
-    <article class="mc-modulo">
-      <div class="mc-modulo-cab"><div class="mc-icono" aria-hidden="true">⌂</div><div><h3>Módulo 2</h3><p>Nombre por confirmar</p></div><span class="mc-chip">M02</span></div>
-      <div class="mc-fila"><span>Casetas del módulo</span><strong>Por registrar</strong></div>
-      <div class="mc-fila"><span>Fotografías recibidas</span><strong>Sin conectar</strong></div>
-      <div class="mc-vacio">ℹ Las casetas de este módulo aparecerán aquí cuando se registren.</div>
-    </article>
-    <article class="mc-modulo">
-      <div class="mc-modulo-cab"><div class="mc-icono" aria-hidden="true">⌂</div><div><h3>Módulo 3</h3><p>Nombre por confirmar</p></div><span class="mc-chip">M03</span></div>
-      <div class="mc-fila"><span>Casetas del módulo</span><strong>Por registrar</strong></div>
-      <div class="mc-fila"><span>Fotografías recibidas</span><strong>Sin conectar</strong></div>
-      <div class="mc-vacio">ℹ Las casetas de este módulo aparecerán aquí cuando se registren.</div>
-    </article>
-    <article class="mc-modulo">
-      <div class="mc-modulo-cab"><div class="mc-icono" aria-hidden="true">⌂</div><div><h3>Módulo 4</h3><p>Nombre por confirmar</p></div><span class="mc-chip">M04</span></div>
-      <div class="mc-fila"><span>Casetas del módulo</span><strong>Por registrar</strong></div>
-      <div class="mc-fila"><span>Fotografías recibidas</span><strong>Sin conectar</strong></div>
-      <div class="mc-vacio">ℹ Las casetas de este módulo aparecerán aquí cuando se registren.</div>
-    </article>
-  </section>
+  {% if form %}
+    <dialog id="form-caseta" class="mc-dialogo" aria-labelledby="titulo-caseta"
+            {% if editando or form.is_bound %}data-abrir data-restablecer{% endif %}>
+      <h2 id="titulo-caseta">{% if editando %}Editar {{ editando.nombre }}{% else %}Agregar caseta{% endif %}</h2>
+      <form method="post" action="{% url 'web:modulos_casetas' %}{% if editando %}?editar={{ editando.pk }}{% endif %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mc-dialogo-acciones">
+          <a class="btn" href="{% url 'web:modulos_casetas' %}" data-cancelar-caseta>Cancelar</a>
+          <button type="submit" class="btn btn-primario">{% icono "guardar" %} Guardar caseta</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="form-modulo" class="mc-dialogo" aria-labelledby="titulo-modulo"
+            {% if abrir_modulo %}data-abrir-modulo{% endif %}>
+      <h2 id="titulo-modulo">{% if modulo_en_edicion %}Editar {{ modulo_en_edicion.nombre }}{% else %}Agregar módulo{% endif %}</h2>
+      <form method="post" action="{% if modulo_en_edicion %}{% url 'web:modulo_editar' modulo_en_edicion.pk %}{% else %}{% url 'web:modulo_nuevo' %}{% endif %}">
+        {% csrf_token %}
+        {{ form_modulo.as_p }}
+        <div class="mc-dialogo-acciones">
+          <a class="btn" href="{% url 'web:modulos_casetas' %}" data-cancelar-modulo>Cancelar</a>
+          <button type="submit" class="btn btn-primario">{% icono "guardar" %} Guardar módulo</button>
+        </div>
+      </form>
+    </dialog>
+  {% endif %}
 </div>
 {% endblock %}
+
+{% block scripts %}{% if form %}<script src="{% static 'web/casetas.js' %}" defer></script>{% endif %}{% endblock %}

@@ -11984,3 +11984,251 @@ details.roles-editor > form > small { display: block; margin-bottom: 6px; }
 .modulos-casetas .mc-pie {margin-top:24px;padding:16px 18px;border:1px solid #dce7f1;border-radius:13px;color:#657b92;background:#eef4fa;font-size:.79rem;line-height:1.6}
 @media(max-width:950px){.modulos-casetas .mc-resumen{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:750px){.modulos-casetas .mc-grid{grid-template-columns:1fr}.modulos-casetas .mc-resumen{grid-template-columns:1fr}.modulos-casetas .mc-modulo{padding:18px}}
+
+.modulos-casetas .mc-dialogo {
+  width: min(31rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: clamp(1rem, 4vw, 1.75rem);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.mc-dialogo::backdrop {
+  background: rgb(17 33 54 / .55);
+}
+
+.mc-dialogo h2 {
+  margin: 0 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.mc-dialogo form p label {
+  display: block;
+  margin-bottom: .3rem;
+  font-weight: 600;
+}
+
+.mc-dialogo form p input:not([type="checkbox"]),
+.mc-dialogo form p select {
+  width: 100%;
+}
+
+.mc-dialogo form p:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.mc-dialogo form p:has(input[type="checkbox"]) label {
+  margin: 0;
+}
+
+.mc-dialogo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1.25rem;
+}
+
+.modulos-casetas .mc-acciones-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.modulos-casetas .mc-modulo-cab {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+  align-items: start;
+  gap: .5rem;
+  margin-bottom: .55rem;
+}
+
+.modulos-casetas .mc-modulo-cab .mc-icono,
+.modulos-casetas .mc-editar-modulo {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+}
+
+.modulos-casetas .mc-modulo-titulo {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.modulos-casetas .mc-modulo-titulo h2 {
+  margin: 0 0 .2rem;
+  color: #1c4165;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.modulos-casetas .mc-modulo-titulo .mc-chip {
+  display: inline-block;
+  margin: .35rem 0 0;
+}
+
+.modulos-casetas .mc-editar-modulo {
+  border-radius: var(--radio-sm);
+  color: var(--texto-2);
+}
+
+.modulos-casetas .mc-editar-modulo:hover,
+.modulos-casetas .mc-editar-modulo:focus-visible {
+  background: var(--superficie-2);
+}
+
+.modulos-casetas .mc-editar-modulo .ico {
+  width: .9rem;
+  height: .9rem;
+}
+
+.modulos-casetas .mc-modulo-cab + .mc-fila {
+  border-top: 0;
+}
+
+.modulos-casetas .mc-modulo-cab + .mc-vacio {
+  margin: 0;
+}
+
+.fundos {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.fundos-encabezado {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+}
+
+.fundos h1,
+.fundos h2 {
+  margin: 0;
+}
+
+.fundos-encabezado h1 {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.fundos-pendientes,
+.fundos-tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.fundos-dialogo {
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: clamp(1rem, 4vw, 1.75rem);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.fundos-dialogo::backdrop {
+  background: rgb(17 33 54 / .55);
+}
+
+.fundos-formulario {
+  display: grid;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.fundos-formulario p {
+  display: grid;
+  gap: .25rem;
+  margin: 0;
+}
+
+.fundos-formulario .btn {
+  justify-self: start;
+}
+
+.fundos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  gap: 1rem;
+}
+
+.fundos-tarjeta {
+  overflow: hidden;
+}
+
+.fundos-tarjeta-cab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .65rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie-2);
+}
+
+.fundos-tarjeta-cab h2 {
+  font-size: 1.15rem;
+}
+
+.fundos-icono {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--radio-sm);
+  background: var(--verde-100);
+}
+
+.fundos-total {
+  margin-left: auto;
+  color: var(--texto-2);
+  font-size: .85rem;
+  white-space: nowrap;
+}
+
+.fundos .fundos-modulos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0;
+  padding: 1rem;
+  list-style: none;
+}
+
+.fundos .fundos-modulos li {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .6rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  list-style: none;
+}
+
+.fundos-vacio {
+  margin: 0;
+  padding: 1rem;
+  color: var(--texto-2);
+}
+
+.fundos-pendientes h2 {
+  padding: 1rem 1rem 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 37rem) {
+  .fundos-encabezado {
+    grid-template-columns: 1fr;
+  }
+
+  .fundos-encabezado > .btn {
+    justify-self: start;
+  }
+}

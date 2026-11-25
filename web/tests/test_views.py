@@ -99,7 +99,7 @@ class MatrizDePermisos(TestCase):
     def test_paginas_por_rol(self):
         pages = {
             "web:dashboard": [], "web:bandeja": [], "web:caso": [self.case.pk], "web:captura": [self.cap.pk],
-            "web:mapa": [], "web:mapa_datos": [], "web:plano": [], "web:sesiones": [], "web:sesion": [self.w.session.pk],
+            "web:mapa": [], "web:mapa_datos": [], "web:plano": [], "web:sesiones": [], "web:monitoreo_reiter": [], "web:sesion": [self.w.session.pk],
             "web:reportes": [], "web:exportar_casos": [], "web:notificaciones": [], "web:ia": [],
             "web:usuarios": [], "web:dispositivos": [], "web:destinatarios": [], "web:auditoria": [],
             "web:catalogos": [], "web:catalogo_lote": [self.w.lot.pk], "web:catalogo_hilera": [self.w.row.pk],
@@ -110,7 +110,10 @@ class MatrizDePermisos(TestCase):
                 c = login(Client(), user)
                 r = c.get(reverse(name, args=args))
                 expected = 200 if user.has_role(*PERMISOS[perm]) else 403
-                self.assertEqual(r.status_code, expected, f"{name} {user.email}")
+                if name == "web:sesiones" and expected == 200:
+                    self.assertRedirects(r, reverse("web:monitoreo_reiter"))
+                else:
+                    self.assertEqual(r.status_code, expected, f"{name} {user.email}")
 
     def test_anonimo_va_al_login_y_htmx_recibe_redireccion_de_cliente(self):
         r = self.client.get(reverse("web:bandeja"))
